@@ -1,6 +1,88 @@
---Main Script
-
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+--> Taken from my project Niggardly Client. Credits to Redline for the original code.
+do
+    local __LUAU_OPTIMIZATION_CHECK, _ = pcall(function()
+        for i, v in {} do end
+    end)
+    
+    if (__LUAU_OPTIMIZATION_CHECK) then
+        pairs = function(t)
+            return t
+        end
+    
+        ipairs = function(t)
+            return t
+        end
+    end
+end
+
+--> Also taken from my project Niggardly Client, only took the Heartbeat handler
+local Framework = (function ()
+    local __Framework = {}
+
+    do
+        __Framework.Heartbeat = {
+            Callback = nil,
+            Delay = 0,
+            Connection = nil
+        }
+        __Framework.Heartbeat.__index = __Framework.Heartbeat
+
+        function __Framework.Heartbeat.new(callback)
+            return setmetatable({
+                Callback = callback
+            }, __Framework.Heartbeat)
+        end
+
+        function __Framework.Heartbeat:Initialize()
+            if (not self.Connection) then
+                self.Connection = RunService.Heartbeat:Connect(function(delta)
+                    self.Callback(delta)
+                    task.wait(self.Delay)
+                end)
+            end
+        end
+
+        function __Framework.Heartbeat:Terminate()
+            if (self.Connection) then
+                self.Connection:Disconnect()
+            end
+        end
+
+        function __Framework.Heartbeat:SetCallback(new_callback)
+            self.Callback = new_callback
+        end
+
+        function __Framework.Heartbeat:SetDelay(new_delay)
+            self.Delay = new_delay
+        end
+    end
+
+    do
+        function __Framework.RegisterRemoteEvent(remote_path)
+            local self = {
+                path = remote_path,
+                old = nil
+            }
+
+            function self:Fire(...)
+                self.old = ... --> Saves this for "Repeat", always overwrites.
+                self.path:FireServer(...)
+            end
+
+            function self:Repeat()
+                self.path:FireServer(self.old)
+            end
+        end
+    end
+
+    return __Framework
+end)()
 
 local Window = Rayfield:CreateWindow({
     Name = "All Scripts",
@@ -28,6 +110,12 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
+local Settings = {
+    ["AutoBuy"] = false,
+    ["AutoWork"] = false,
+    ["AutoRebirth"] = false
+}
+
 local MainTab = Window:CreateTab("Main", nil)              -- Title, Image
 local AutoFarmTab = Window:CreateTab("AutoFarm", nil)      -- Title, Image
 local MiscTab = Window:CreateTab("Misc", nil)              -- Title, Image
@@ -35,310 +123,119 @@ local MainSection = MainTab:CreateSection("Main")
 local AutoFarmSection = AutoFarmTab:CreateSection("AutoFarm")
 local MiscSection = MiscTab:CreateSection("Misc")
 
-local Toggle = AutoFarmTab:CreateToggle({
-    Name = "Auto Buy",
-    CurrentValue = false,
-    Flag = "Toggle1",     -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-    Callback = function(Value)
-        local function executeRemoteServer(args, event)
-            event:FireServer(table.unpack(args))
+local PlayerRemote, ControlEvent do
+    PlayerRemote = Framework.RegisterRemoteEvent(workspace.PlayerManagement[Players.LocalPlayer.Name]:WaitForChild("LocalRemote", 15))
+    ControlEvent = Framework.RegisterRemoteEvent(ReplicatedStorage._RemoteEvents:WaitForChild("_ControlEven", 15))
+end
+
+do
+    AutoFarmTab:CreateToggle({
+        Name = "Auto Buy",
+        CurrentValue = false,
+        Flag = "AutoFarm_AutoBuy",
+        Callback = function(Value)
+            Settings["AutoBuy"] = Value
         end
+    })
 
-        local scripts = {
-            {
-                args = {
-                    [1] = true,
-                    [2] = "PurchaseStation",
-                    [3] = 1,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillinw.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "PurchaseStation",
-                    [3] = 2,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "PurchaseStation",
-                    [3] = 3,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "PurchaseStation",
-                    [3] = 4,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "PurchaseStation",
-                    [3] = 5,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "PurchaseStation",
-                    [3] = 6,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "PurchaseStation",
-                    [3] = 7,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "PurchaseStation",
-                    [3] = 8,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "PurchaseStation",
-                    [3] = 9,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "U100",
-                    [3] = 1,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "U100",
-                    [3] = 2,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "U100",
-                    [3] = 3,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "U100",
-                    [3] = 4,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "U100",
-                    [3] = 5,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "U100",
-                    [3] = 6,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "U100",
-                    [3] = 7,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "U100",
-                    [3] = 8,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            },
-            {
-                args = {
-                    [1] = true,
-                    [2] = "U100",
-                    [3] = 9,
-                    [4] = "Earth"
-                },
-                event = workspace.PlayerManagement.ChaseisChillin2.LocalRemote
-            }
-        }
-
-        -- Define the repeat count and delay between executions
-        local repeatCount = 1000000
-        local delayBetweenExecutions = 0.005
-
-        -- Function to execute the scripts
-        local function executeScripts()
-            for i = 1, repeatCount do
-                for _, scriptData in ipairs(scripts) do
-                    executeRemoteServer(scriptData.args, scriptData.event)
-                    wait(delayBetweenExecutions)
-                end
-            end
+    local AutoBuyLoopEvents do
+        AutoBuyLoopEvents = {}
+    
+        for i = 1, 9 do
+            table.insert(AutoBuyLoopEvents, {
+                true,
+                "PurchaseStation",
+                i,
+                "Earth"
+            })
         end
-
-        -- Call the function to execute the scripts
-        executeScripts()
-    end
-})
-
-local Toggle = AutoFarmTab:CreateToggle({
-    Name = "Auto Work",
-    CurrentValue = false,
-    Flag = "Toggle2", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-    Callback = function(Value)
-        local function executeRemoteServer(args)
-            workspace.PlayerManagement.AnyLilSus2004.LocalRemote:FireServer(unpack(args))
-        end
-
-        local scripts = {
-            {
-                [3] = "1",
-            },
-            {
-                [3] = "2",
-            },
-            {
-                [3] = "3",
-            },
-            {
-                [3] = "4",
-            },
-            {
-                [3] = "5",
-            },
-            {
-                [3] = "6",
-            },
-            {
-                [3] = "7",
-            },
-            {
-                [3] = "8",
-            },
-            {
-                [3] = "9",
-            }
-        }
-
-        local repeatCount = 1000000
-        local delayBetweenExecutions = 0.0005
-
-        for i = 1, repeatCount do
-            for _, scriptArgs in ipairs(scripts) do
-                local args = {
-                    [1] = true,
-                    [2] = "workBut",
-                    [3] = scriptArgs[3],
-                    [4] = "Earth"
-                }
-
-                executeRemoteServer(args)
-                wait(delayBetweenExecutions)
-            end
-        end
-
-        -- define a boolean variable
-        local is_true = true
-
-        -- use if-else statement to check boolean value
-        if is_true then
-            print("This is true")
-        else
-            print("This is false")
-        end
-
-        -- use and, or operators to combine boolean values
-        local a = true
-        local b = false
-
-        if a and b then
-            print("a and b is true")
-        elseif a or b then
-            print("a or b is true")
-        else
-            print("a and b is false")
+    
+        for i = 1, 9 do
+            table.insert(AutoBuyLoopEvents, {
+                true,
+                "U100",
+                i,
+                "Earth"
+            })
         end
     end
-})
+    
+    local AutoBuyLoop = Framework.Heartbeat.new(function()
+        if (not Settings["AutoBuy"]) then
+            return
+        end
+    
+        if (not PlayerRemote) then
+            return
+        end
+    
+        for _, event in pairs(AutoBuyLoopEvents) do
+            PlayerRemote:Fire(event)
+        end
+    end)
+end
 
-local AutoRebirthToggle = AutoFarmTab:CreateToggle({
-    Name = "Auto Rebirth",
-    CurrentValue = false,
-    Flag = "Toggle3", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-    Callback = function(Value)
-        local scripts = {
-            {
-                args = {
-                    [1] = true,
-                    [2] = "rebirth",
-                    [3] = "Earth"
-                },
-                event = game:GetService("ReplicatedStorage")._RemoteEvents._ControlEvent
-            }
-        }
+do
+    AutoFarmTab:CreateToggle({
+        Name = "Auto Work",
+        CurrentValue = false,
+        Flag = "AutoFarm_AutoWork",
+        Callback = function(Value)
+            Settings["AutoWork"] = Value
+        end
+    })
 
-        -- Define the repeat count and delay between executions
-        local repeatCount = 1000000
-        local delayBetweenExecutions = 0.0005
+    local AutoWorkLoopEvents do
+        AutoWorkLoopEvents = {}
 
-        -- Function to execute the scripts
-        local function executeScripts()
-            for i = 1, repeatCount do
-                for _, scriptData in ipairs(scripts) do
-                    scriptData.event:FireServer(unpack(scriptData.args))
-                    wait(delayBetweenExecutions)
-                end
-            end
+        for i = 1, 9 do
+            table.insert(AutoWorkLoopEvents, {
+                true,
+                "workBut",
+                tostring(i),
+                "Earth"
+            })
+        end
+    end
+
+    local AutoWorkLoop = Framework.Heartbeat.new(function()
+        if (not Settings["AutoWork"]) then
+            return
+        end
+    
+        if (not PlayerRemote) then
+            return
+        end
+    
+        for _, event in pairs(AutoWorkLoopEvents) do
+            PlayerRemote:Fire(event)
+        end
+    end)
+end
+
+do
+    AutoFarmTab:CreateToggle({
+        Name = "Auto Rebirth",
+        CurrentValue = false,
+        Flag = "AutoFarm_AutoRebirth",
+        Callback = function(Value)
+            Settings["AutoRebirth"] = Value
+        end
+    })
+
+    local AutoRebirthLoop = Framework.Heartbeat.new(function()
+        if (not Settings["AutoRebirth"]) then
+            return
         end
 
-        -- Call the function to execute the scripts
-        executeScripts()
-    end
-})
+        if (not ControlEvent) then
+            return
+        end
+
+        ControlEvent:Fire({
+            true,
+            "rebirth",
+            "Earth"
+        })
+    end)
+end
