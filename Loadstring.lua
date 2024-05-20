@@ -1,0 +1,1 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/ChaseRocks360/BS/main/BillionaireSimX.lua"))()
